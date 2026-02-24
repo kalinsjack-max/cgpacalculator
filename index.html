@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Manager - CGPA Calculator</title>
+    <!-- Tailwind CSS for Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and Babel for JSX execution in browser -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white !important; -webkit-print-color-adjust: exact; }
+            @page { margin: 1.5cm; size: auto; }
+            .print-only { display: block !important; }
+        }
+        /* Fix for icons appearing before Lucide hydrates them */
+        [data-lucide] {
+            width: 1.25em;
+            height: 1.25em;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+
+        // Fixed Icon Component to handle Lucide core library
+        const Icon = ({ name, className }) => {
+            // Convert CamelCase to kebab-case for Lucide core attributes
+            const kebabName = name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+            
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]); // Re-run when icon name changes
+
+            return <i data-lucide={kebabName} className={className}></i>;
+        };
+
+        const App = () => {
+            const [subjects, setSubjects] = useState([]);
+            const [courseName, setCourseName] = useState('');
+            const [letterGrade, setLetterGrade] = useState('A+'); 
+            const [gradePoint, setGradePoint] = useState('4.00'); 
+            const [credits, setCredits] = useState('3.0');
+            const [error, setError] = useState('');
+            const [presets, setPresets] = useState('');
+
+            const subjectOptions = useMemo(() => {
+                return presets.split('\n')
+                    .map(name => name.trim())
+                    .filter(name => name !== '');
+            }, [presets]);
+
+            const gradeOptions = {
+                "A+": "4.00", "A": "3.75", "A-": "3.50", "B+": "3.25", "B": "3.00",
+                "B-": "2.75", "C+": "2.50", "C": "2.25", "D": "2.00", "F": "0.00"
+            };
+
+            const handleGradeChange = (e) => {
+                const selectedLetter = e.target.value;
+                setLetterGrade(selectedLetter);
+                setGradePoint(gradeOptions[selectedLetter]);
+            };
+
+            const stats = useMemo(() => {
+                if (subjects.length === 0) return { totalCredits: 0, earnedCredits: 0, totalPoints: 0, gpa: "0.00", numericGpa: 0 };
+                const totalCredits = subjects.reduce((sum, sub) => sum + sub.credits, 0);
+                const earnedCredits = subjects.reduce((sum, sub) => sub.point > 0 ? sum + sub.credits : sum, 0);
+                const totalPoints = subjects.reduce((sum, sub) => sum + (sub.point * sub.credits), 0);
+                const numericGpa = earnedCredits > 0 ? (totalPoints / earnedCredits) : 0;
+                return { totalCredits, earnedCredits, totalPoints, gpa: numericGpa.toFixed(2), numericGpa };
+            }, [subjects]);
+
+            const addSubject = (e) => {
+                e.preventDefault();
+                const p = parseFloat(gradePoint);
+                const c = parseFloat(credits);
+                if (isNaN(p) || p < 0 || p > 4) { setError('Grade point must be 0-4.00'); return; }
+                if (isNaN(c) || c <= 0) { setError('Enter valid credits.'); return; }
+                setSubjects([...subjects, { 
+                    id: crypto.randomUUID(), 
+                    name: courseName || `Course ${subjects.length + 1}`, 
+                    letter: letterGrade, 
+                    point: p, 
+                    credits: c 
+                }]);
+                setCourseName('');
+                setError('');
+            };
+
+            const handleDownload = () => {
+                window.print();
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8 print:bg-white print:p-0">
+                    <div className="max-w-6xl mx-auto">
+                        
+                        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 no-print">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-rose-600 p-3 rounded-2xl shadow-lg shadow-rose-200">
+                                    <Icon name="GraduationCap" className="w-8 h-8 text-white" />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-black tracking-tight">Academic Manager</h1>
+                                    <p className="text-slate-500 text-sm font-medium">Result sheet generator & calculator</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button type="button" onClick={() => { setSubjects([]); setPresets(''); }} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all">
+                                    <Icon name="RefreshCw" className="w-4 h-4" /> Reset
+                                </button>
+                                <button type="button" onClick={handleDownload} className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-sky-500 hover:bg-sky-600 rounded-xl shadow-lg transition-all active:scale-95">
+                                    <Icon name="Download" className="w-4 h-4" /> Download Result Sheet
+                                </button>
+                            </div>
+                        </header>
+
+                        <div className="hidden print:block text-center py-8 bg-white mb-4">
+                            <h1 className="text-4xl font-bold text-[#CD5C5C] mb-2 font-serif">Final Term Result</h1>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                            <div className="lg:col-span-4 no-print space-y-6">
+                                {/* GPA Progress/Indicator Card */}
+                                <div className="bg-gradient-to-br from-rose-500 to-rose-700 p-6 rounded-[2rem] text-white shadow-xl shadow-rose-200">
+                                    <p className="text-rose-100 text-xs font-bold uppercase tracking-widest mb-1">Current GPA</p>
+                                    <h2 className="text-6xl font-black mb-4 tracking-tighter">{stats.gpa}</h2>
+                                    <div className="grid grid-cols-2 gap-4 border-t border-white/20 pt-4">
+                                        <div><p className="text-rose-100 text-[9px] uppercase font-bold">Total Credits</p><p className="text-lg font-bold">{stats.totalCredits.toFixed(1)}</p></div>
+                                        <div><p className="text-rose-100 text-[9px] uppercase font-bold">Earned</p><p className="text-lg font-bold">{stats.earnedCredits.toFixed(1)}</p></div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                    <div className="flex items-center gap-2 mb-3"><Icon name="ListChecks" className="w-4 h-4 text-indigo-500" /><h2 className="text-sm font-bold text-slate-700 uppercase">Quick Subject Entry</h2></div>
+                                    <textarea value={presets} onChange={(e) => setPresets(e.target.value)} placeholder="Algorithm&#10;Java Programming..." rows="3" className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-rose-500 outline-none resize-none transition-all placeholder:text-slate-300" />
+                                </div>
+
+                                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                    <div className="flex items-center gap-2 mb-6"><Icon name="Plus" className="w-5 h-5 text-rose-500" /><h2 className="text-lg font-bold text-slate-700">Add to Result</h2></div>
+                                    <form onSubmit={addSubject} className="space-y-4">
+                                        <input type="text" list="subject-presets" value={courseName} onChange={(e) => setCourseName(e.target.value)} placeholder="Course Name" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-rose-500 outline-none" />
+                                        <datalist id="subject-presets">{subjectOptions.map((name, i) => <option key={i} value={name} />)}</datalist>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input type="number" step="0.5" value={credits} onChange={(e) => setCredits(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100" />
+                                            <select value={letterGrade} onChange={handleGradeChange} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 appearance-none">{Object.keys(gradeOptions).map(g => <option key={g} value={g}>{g}</option>)}</select>
+                                        </div>
+                                        <input type="number" step="0.01" value={gradePoint} onChange={(e) => setGradePoint(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 font-bold text-rose-600" />
+                                        {error && <p className="text-red-500 text-xs font-semibold">{error}</p>}
+                                        <button type="submit" className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform">Add Subject</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div className="lg:col-span-8">
+                                <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden print:border-none">
+                                    <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between no-print">
+                                        <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase"><Icon name="FileText" className="w-4 h-4" /> Preview Sheet</span>
+                                    </div>
+                                    <table className="w-full border-collapse">
+                                        <thead>
+                                            <tr className="bg-white border-b-2 border-slate-50 print:border-slate-300">
+                                                <th className="px-6 py-5 text-left text-[11px] font-bold text-slate-400 uppercase border-r border-slate-50 print:border-slate-300">Course Name</th>
+                                                <th className="px-4 py-5 text-center text-[11px] font-bold text-slate-400 uppercase border-r border-slate-50 print:border-slate-300">Credit</th>
+                                                <th className="px-4 py-5 text-center text-[11px] font-bold text-slate-400 uppercase border-r border-slate-50 print:border-slate-300">Grade</th>
+                                                <th className="px-4 py-5 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">Grade Point</th>
+                                                <th className="px-4 py-5 text-center text-[11px] font-bold text-slate-400 uppercase no-print">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {subjects.length === 0 ? (
+                                                <tr className="print:hidden">
+                                                    <td colSpan="5" className="py-24 text-center">
+                                                        <Icon name="BookOpen" className="w-12 h-12 text-slate-100 mx-auto mb-3" />
+                                                        <p className="text-slate-300 font-medium italic">Enter your subjects on the left to generate the sheet</p>
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                subjects.map((sub) => (
+                                                    <tr key={sub.id} className="border-b border-slate-50">
+                                                        <td className="px-6 py-4 border-r border-slate-50 print:border-slate-300"><span className="block font-bold text-[13px]">{sub.name}</span><span className="text-[10px] text-slate-400 italic">(Fresh Registration)</span></td>
+                                                        <td className="px-4 py-4 text-center border-r border-slate-50 print:border-slate-300 font-mono text-[13px]">{sub.credits.toFixed(2)}</td>
+                                                        <td className="px-4 py-4 text-center border-r border-slate-50 print:border-slate-300 font-bold text-[13px]">{sub.letter}</td>
+                                                        <td className="px-4 py-4 text-center font-mono font-bold text-[13px]">{(sub.point * sub.credits).toFixed(3)}</td>
+                                                        <td className="px-4 py-4 text-center no-print"><button onClick={() => setSubjects(subjects.filter(s => s.id !== sub.id))} className="text-slate-300 hover:text-rose-500 transition-colors"><Icon name="Trash2" className="w-4 h-4" /></button></td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                    <div className="p-8 bg-slate-50 border-t-2 border-slate-100 print:bg-white print:border-t-4 print:border-double">
+                                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-lg font-bold text-slate-900">
+                                            <div><span className="text-slate-400 font-normal uppercase text-xs">Total Credit:</span> {stats.totalCredits.toFixed(2)}</div>
+                                            <div><span className="text-slate-400 font-normal uppercase text-xs">Earned:</span> {stats.earnedCredits.toFixed(2)}</div>
+                                            <div><span className="text-slate-400 font-normal uppercase text-xs">GPA:</span> <span className="text-rose-600 text-3xl font-black">{stats.gpa}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="hidden print:flex justify-between mt-24 px-4">
+                                    <div className="text-center"><div className="w-44 border-t border-slate-400 mb-2"></div><p className="text-[10px] font-bold uppercase">Student Signature</p></div>
+                                    <div className="text-center"><div className="w-44 border-t border-slate-400 mb-2"></div><p className="text-[10px] font-bold uppercase">Authorized Official</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <footer className="mt-16 mb-8 text-center no-print border-t border-slate-100 pt-10">
+                            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 mb-4 shadow-sm hover:scale-110 transition-transform"><Icon name="Heart" className="w-5 h-5 text-rose-500 fill-rose-500" /></div>
+                            <p className="text-slate-400 text-sm font-semibold flex items-center justify-center gap-2">Developed By <span className="text-slate-800 font-black">AISHORJO</span></p>
+                            <div className="flex items-center justify-center gap-4 mt-6">
+                                <span className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-sky-500 transition-colors cursor-pointer"><Icon name="Globe" className="w-4 h-4" /></span>
+                                <span className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><Icon name="Linkedin" className="w-4 h-4" /></span>
+                                <span className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-slate-900 transition-colors cursor-pointer"><Icon name="Github" className="w-4 h-4" /></span>
+                                <span className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"><Icon name="Instagram" className="w-4 h-4" /></span>
+                            </div>
+                        </footer>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
