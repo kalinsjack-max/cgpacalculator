@@ -13,38 +13,85 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            scroll-behavior: smooth;
+        }
+
+        /* Modern Glassmorphism & Custom Shadows */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .premium-shadow {
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* GPA Card Animation */
+        .gpa-glow {
+            position: relative;
+        }
+        .gpa-glow::after {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(circle, rgba(244, 63, 94, 0.15) 0%, rgba(244, 63, 94, 0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
         @media print {
             .no-print { display: none !important; }
             body { background-color: white !important; -webkit-print-color-adjust: exact; }
             @page { margin: 1.5cm; size: auto; }
             .print-only { display: block !important; }
         }
-        /* Fix for icons appearing before Lucide hydrates them */
+
         [data-lucide] {
             width: 1.25em;
             height: 1.25em;
             display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 </head>
-<body class="bg-slate-50">
+<body class="bg-[#F9FAFB] selection:bg-rose-100 selection:text-rose-600">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
 
-        // Fixed Icon Component to handle Lucide core library
         const Icon = ({ name, className }) => {
-            // Convert CamelCase to kebab-case for Lucide core attributes
             const kebabName = name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
             
             useEffect(() => {
                 if (window.lucide) {
                     window.lucide.createIcons();
                 }
-            }, [name]); // Re-run when icon name changes
+            }, [name]);
 
             return <i data-lucide={kebabName} className={className}></i>;
         };
@@ -106,125 +153,251 @@
             };
 
             return (
-                <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8 print:bg-white print:p-0">
+                <div className="min-h-screen p-4 md:p-10 print:bg-white print:p-0">
                     <div className="max-w-6xl mx-auto">
                         
-                        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 no-print">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-rose-600 p-3 rounded-2xl shadow-lg shadow-rose-200">
-                                    <Icon name="GraduationCap" className="w-8 h-8 text-white" />
+                        {/* Improved Header */}
+                        <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6 no-print">
+                            <div className="flex items-center gap-5">
+                                <div className="bg-rose-500 p-4 rounded-[1.5rem] shadow-xl shadow-rose-200 transform hover:rotate-6 transition-transform">
+                                    <Icon name="GraduationCap" className="w-9 h-9 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-black tracking-tight">Academic Manager</h1>
-                                    <p className="text-slate-500 text-sm font-medium">Result sheet generator & calculator</p>
+                                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Academic Manager</h1>
+                                    <p className="text-slate-400 font-medium text-sm mt-0.5 flex items-center gap-2">
+                                        <Icon name="CheckCircle" className="w-3.5 h-3.5 text-emerald-500" />
+                                        Advanced CGPA Result Generator
+                                    </p>
                                 </div>
                             </div>
-                            <div className="flex gap-2">
-                                <button type="button" onClick={() => { setSubjects([]); setPresets(''); }} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all">
+                            <div className="flex gap-3">
+                                <button type="button" onClick={() => { setSubjects([]); setPresets(''); }} className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-2xl transition-all hover:shadow-md active:scale-95">
                                     <Icon name="RefreshCw" className="w-4 h-4" /> Reset
                                 </button>
-                                <button type="button" onClick={handleDownload} className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-sky-500 hover:bg-sky-600 rounded-xl shadow-lg transition-all active:scale-95">
-                                    <Icon name="Download" className="w-4 h-4" /> Download Result Sheet
+                                <button type="button" onClick={handleDownload} className="flex items-center gap-2 px-6 py-3 text-sm font-extrabold text-white bg-slate-900 hover:bg-black rounded-2xl shadow-xl shadow-slate-200 transition-all active:scale-95">
+                                    <Icon name="Download" className="w-4 h-4" /> Export Result
                                 </button>
                             </div>
                         </header>
 
-                        <div className="hidden print:block text-center py-8 bg-white mb-4">
-                            <h1 className="text-4xl font-bold text-[#CD5C5C] mb-2 font-serif">Final Term Result</h1>
+                        <div className="hidden print:block text-center py-8 bg-white mb-4 border-b-2 border-rose-100">
+                            <h1 className="text-5xl font-black text-[#CD5C5C] mb-2 font-serif uppercase tracking-tight">Final Term Result</h1>
+                            <p className="text-slate-400 font-bold text-sm tracking-widest">OFFICIAL ACADEMIC TRANSCRIPT</p>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                            <div className="lg:col-span-4 no-print space-y-6">
-                                {/* GPA Progress/Indicator Card */}
-                                <div className="bg-gradient-to-br from-rose-500 to-rose-700 p-6 rounded-[2rem] text-white shadow-xl shadow-rose-200">
-                                    <p className="text-rose-100 text-xs font-bold uppercase tracking-widest mb-1">Current GPA</p>
-                                    <h2 className="text-6xl font-black mb-4 tracking-tighter">{stats.gpa}</h2>
-                                    <div className="grid grid-cols-2 gap-4 border-t border-white/20 pt-4">
-                                        <div><p className="text-rose-100 text-[9px] uppercase font-bold">Total Credits</p><p className="text-lg font-bold">{stats.totalCredits.toFixed(1)}</p></div>
-                                        <div><p className="text-rose-100 text-[9px] uppercase font-bold">Earned</p><p className="text-lg font-bold">{stats.earnedCredits.toFixed(1)}</p></div>
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                            
+                            {/* Left Column */}
+                            <div className="lg:col-span-4 no-print space-y-8">
+                                
+                                {/* Refined GPA Card */}
+                                <div className="bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#020617] p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                                        <Icon name="Zap" className="w-24 h-24" />
+                                    </div>
+                                    <p className="text-rose-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Academic Standing</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <h2 className="text-7xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">{stats.gpa}</h2>
+                                        <span className="text-slate-500 font-bold text-xl uppercase tracking-tighter">GPA</span>
+                                    </div>
+                                    
+                                    <div className="mt-8 space-y-4">
+                                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                            <div 
+                                                className="bg-gradient-to-r from-rose-500 to-rose-300 h-full transition-all duration-1000 ease-out" 
+                                                style={{ width: `${(parseFloat(stats.gpa) / 4) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div>
+                                                <p className="text-slate-500 text-[9px] uppercase font-bold tracking-widest mb-1">Total Credits</p>
+                                                <p className="text-2xl font-bold font-mono">{stats.totalCredits.toFixed(1)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-500 text-[9px] uppercase font-bold tracking-widest mb-1">Earned</p>
+                                                <p className="text-2xl font-bold font-mono text-emerald-400">{stats.earnedCredits.toFixed(1)}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                                    <div className="flex items-center gap-2 mb-3"><Icon name="ListChecks" className="w-4 h-4 text-indigo-500" /><h2 className="text-sm font-bold text-slate-700 uppercase">Quick Subject Entry</h2></div>
-                                    <textarea value={presets} onChange={(e) => setPresets(e.target.value)} placeholder="Algorithm&#10;Java Programming..." rows="3" className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-rose-500 outline-none resize-none transition-all placeholder:text-slate-300" />
+                                {/* Preset Entry */}
+                                <div className="glass-card p-7 rounded-[2rem] premium-shadow border border-white">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="bg-indigo-50 p-2 rounded-xl">
+                                            <Icon name="ListChecks" className="w-5 h-5 text-indigo-500" />
+                                        </div>
+                                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-tight">Quick Subject Entry</h2>
+                                    </div>
+                                    <textarea 
+                                        value={presets} 
+                                        onChange={(e) => setPresets(e.target.value)} 
+                                        placeholder="Algorithm&#10;Java Programming..." 
+                                        rows="3" 
+                                        className="w-full px-5 py-4 text-sm rounded-2xl bg-white border border-slate-100 focus:ring-4 focus:ring-indigo-50 outline-none resize-none transition-all placeholder:text-slate-300 font-medium" 
+                                    />
                                 </div>
 
-                                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                                    <div className="flex items-center gap-2 mb-6"><Icon name="Plus" className="w-5 h-5 text-rose-500" /><h2 className="text-lg font-bold text-slate-700">Add to Result</h2></div>
-                                    <form onSubmit={addSubject} className="space-y-4">
-                                        <input type="text" list="subject-presets" value={courseName} onChange={(e) => setCourseName(e.target.value)} placeholder="Course Name" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-rose-500 outline-none" />
-                                        <datalist id="subject-presets">{subjectOptions.map((name, i) => <option key={i} value={name} />)}</datalist>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <input type="number" step="0.5" value={credits} onChange={(e) => setCredits(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100" />
-                                            <select value={letterGrade} onChange={handleGradeChange} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 appearance-none">{Object.keys(gradeOptions).map(g => <option key={g} value={g}>{g}</option>)}</select>
+                                {/* Main Form */}
+                                <div className="glass-card p-7 rounded-[2rem] premium-shadow border border-white">
+                                    <div className="flex items-center gap-3 mb-8">
+                                        <div className="bg-rose-50 p-2 rounded-xl">
+                                            <Icon name="PlusCircle" className="w-5 h-5 text-rose-500" />
                                         </div>
-                                        <input type="number" step="0.01" value={gradePoint} onChange={(e) => setGradePoint(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 font-bold text-rose-600" />
-                                        {error && <p className="text-red-500 text-xs font-semibold">{error}</p>}
-                                        <button type="submit" className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform">Add Subject</button>
+                                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-tight">Add Record</h2>
+                                    </div>
+                                    <form onSubmit={addSubject} className="space-y-5">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Course Name</label>
+                                            <input type="text" list="subject-presets" value={courseName} onChange={(e) => setCourseName(e.target.value)} placeholder="Select or type..." className="w-full px-5 py-4 rounded-2xl bg-white border border-slate-100 focus:ring-4 focus:ring-rose-50 outline-none transition-all font-medium" />
+                                            <datalist id="subject-presets">{subjectOptions.map((name, i) => <option key={i} value={name} />)}</datalist>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-5">
+                                            <div>
+                                                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Credits</label>
+                                                <input type="number" step="0.5" value={credits} onChange={(e) => setCredits(e.target.value)} className="w-full px-5 py-4 rounded-2xl bg-white border border-slate-100 font-bold" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Grade</label>
+                                                <select value={letterGrade} onChange={handleGradeChange} className="w-full px-5 py-4 rounded-2xl bg-white border border-slate-100 appearance-none font-bold text-rose-600 focus:ring-4 focus:ring-rose-50 outline-none">{Object.keys(gradeOptions).map(g => <option key={g} value={g}>{g}</option>)}</select>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Grade Point</label>
+                                            <input type="number" step="0.01" value={gradePoint} onChange={(e) => setGradePoint(e.target.value)} className="w-full px-5 py-4 rounded-2xl bg-rose-50/50 border border-rose-100 font-black text-rose-600 text-lg" />
+                                        </div>
+                                        {error && <p className="text-red-500 text-[11px] font-bold bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>}
+                                        <button type="submit" className="w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-rose-100 active:scale-[0.98] transition-all text-sm uppercase tracking-widest">Add Subject</button>
                                     </form>
                                 </div>
                             </div>
 
+                            {/* Right Column */}
                             <div className="lg:col-span-8">
-                                <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden print:border-none">
-                                    <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between no-print">
-                                        <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase"><Icon name="FileText" className="w-4 h-4" /> Preview Sheet</span>
+                                <div className="glass-card rounded-[2.5rem] premium-shadow border border-white overflow-hidden print:border-none print:shadow-none">
+                                    <div className="p-7 bg-white/50 border-b border-slate-100 flex items-center justify-between no-print">
+                                        <span className="flex items-center gap-3 text-xs font-black text-slate-400 uppercase tracking-[0.2em]"><Icon name="Layout" className="w-4 h-4 text-rose-500" /> Preview Sheet</span>
+                                        <div className="flex gap-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
+                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
+                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
+                                        </div>
                                     </div>
-                                    <table className="w-full border-collapse">
-                                        <thead>
-                                            <tr className="bg-white border-b-2 border-slate-50 print:border-slate-300">
-                                                <th className="px-6 py-5 text-left text-[11px] font-bold text-slate-400 uppercase border-r border-slate-50 print:border-slate-300">Course Name</th>
-                                                <th className="px-4 py-5 text-center text-[11px] font-bold text-slate-400 uppercase border-r border-slate-50 print:border-slate-300">Credit</th>
-                                                <th className="px-4 py-5 text-center text-[11px] font-bold text-slate-400 uppercase border-r border-slate-50 print:border-slate-300">Grade</th>
-                                                <th className="px-4 py-5 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">Grade Point</th>
-                                                <th className="px-4 py-5 text-center text-[11px] font-bold text-slate-400 uppercase no-print">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {subjects.length === 0 ? (
-                                                <tr className="print:hidden">
-                                                    <td colSpan="5" className="py-24 text-center">
-                                                        <Icon name="BookOpen" className="w-12 h-12 text-slate-100 mx-auto mb-3" />
-                                                        <p className="text-slate-300 font-medium italic">Enter your subjects on the left to generate the sheet</p>
-                                                    </td>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border-collapse">
+                                            <thead>
+                                                <tr className="bg-slate-50/30 border-b-2 border-slate-100 print:border-slate-300">
+                                                    <th className="px-8 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-50 print:border-slate-300">Course Detail</th>
+                                                    <th className="px-5 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-50 print:border-slate-300">Credit</th>
+                                                    <th className="px-5 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-50 print:border-slate-300">Grade</th>
+                                                    <th className="px-5 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Weighted</th>
+                                                    <th className="px-5 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest no-print">Action</th>
                                                 </tr>
-                                            ) : (
-                                                subjects.map((sub) => (
-                                                    <tr key={sub.id} className="border-b border-slate-50">
-                                                        <td className="px-6 py-4 border-r border-slate-50 print:border-slate-300"><span className="block font-bold text-[13px]">{sub.name}</span><span className="text-[10px] text-slate-400 italic">(Fresh Registration)</span></td>
-                                                        <td className="px-4 py-4 text-center border-r border-slate-50 print:border-slate-300 font-mono text-[13px]">{sub.credits.toFixed(2)}</td>
-                                                        <td className="px-4 py-4 text-center border-r border-slate-50 print:border-slate-300 font-bold text-[13px]">{sub.letter}</td>
-                                                        <td className="px-4 py-4 text-center font-mono font-bold text-[13px]">{(sub.point * sub.credits).toFixed(3)}</td>
-                                                        <td className="px-4 py-4 text-center no-print"><button onClick={() => setSubjects(subjects.filter(s => s.id !== sub.id))} className="text-slate-300 hover:text-rose-500 transition-colors"><Icon name="Trash2" className="w-4 h-4" /></button></td>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {subjects.length === 0 ? (
+                                                    <tr className="print:hidden">
+                                                        <td colSpan="5" className="py-32 text-center">
+                                                            <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-inner">
+                                                                <Icon name="Inbox" className="w-10 h-10 text-slate-200" />
+                                                            </div>
+                                                            <p className="text-slate-400 font-bold uppercase tracking-widest text-[11px]">No academic records found</p>
+                                                        </td>
                                                     </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                    <div className="p-8 bg-slate-50 border-t-2 border-slate-100 print:bg-white print:border-t-4 print:border-double">
-                                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-lg font-bold text-slate-900">
-                                            <div><span className="text-slate-400 font-normal uppercase text-xs">Total Credit:</span> {stats.totalCredits.toFixed(2)}</div>
-                                            <div><span className="text-slate-400 font-normal uppercase text-xs">Earned:</span> {stats.earnedCredits.toFixed(2)}</div>
-                                            <div><span className="text-slate-400 font-normal uppercase text-xs">GPA:</span> <span className="text-rose-600 text-3xl font-black">{stats.gpa}</span></div>
+                                                ) : (
+                                                    subjects.map((sub) => (
+                                                        <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors group">
+                                                            <td className="px-8 py-5 border-r border-slate-50 print:border-slate-300">
+                                                                <span className="block font-bold text-slate-800 text-[14px]">{sub.name}</span>
+                                                                <span className="text-[10px] text-slate-400 font-bold uppercase mt-1 inline-block tracking-tighter opacity-60">(Regular Registration)</span>
+                                                            </td>
+                                                            <td className="px-5 py-5 text-center border-r border-slate-50 print:border-slate-300 font-black text-slate-600 text-[14px]">{sub.credits.toFixed(2)}</td>
+                                                            <td className="px-5 py-5 text-center border-r border-slate-50 print:border-slate-300 font-black text-rose-600 text-[14px]">{sub.letter}</td>
+                                                            <td className="px-5 py-5 text-center font-black text-slate-900 text-[14px]">{(sub.point * sub.credits).toFixed(3)}</td>
+                                                            <td className="px-5 py-5 text-center no-print">
+                                                                <button onClick={() => setSubjects(subjects.filter(s => s.id !== sub.id))} className="text-slate-200 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition-all"><Icon name="Trash2" className="w-4 h-4" /></button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                        
+                                        {/* Result Summary Footer */}
+                                        <div className="p-10 bg-[#0f172a] text-white print:bg-white print:text-slate-900 print:border-t-8 print:border-double print:border-slate-900">
+                                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                                                <div className="flex flex-wrap items-center gap-x-10 gap-y-4">
+                                                    <div className="space-y-1">
+                                                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Total Credits</p>
+                                                        <p className="text-3xl font-black font-mono">{stats.totalCredits.toFixed(2)}</p>
+                                                    </div>
+                                                    <div className="hidden md:block w-px h-12 bg-slate-800 print:hidden"></div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Earned Units</p>
+                                                        <p className="text-3xl font-black font-mono text-emerald-400">{stats.earnedCredits.toFixed(2)}</p>
+                                                    </div>
+                                                    <div className="hidden md:block w-px h-12 bg-slate-800 print:hidden"></div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-rose-400 text-[10px] font-black uppercase tracking-widest">Final CGPA</p>
+                                                        <p className="text-5xl font-black text-white print:text-rose-600">{stats.gpa}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="no-print opacity-20 hover:opacity-100 transition-opacity">
+                                                    <Icon name="GraduationCap" className="w-16 h-16" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="hidden print:flex justify-between mt-24 px-4">
-                                    <div className="text-center"><div className="w-44 border-t border-slate-400 mb-2"></div><p className="text-[10px] font-bold uppercase">Student Signature</p></div>
-                                    <div className="text-center"><div className="w-44 border-t border-slate-400 mb-2"></div><p className="text-[10px] font-bold uppercase">Authorized Official</p></div>
+                                
+                                <div className="hidden print:flex justify-between mt-32 px-10">
+                                    <div className="text-center">
+                                        <div className="w-56 border-t-2 border-slate-900 mb-2"></div>
+                                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Candidate Signature</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="w-56 border-t-2 border-slate-900 mb-2"></div>
+                                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Registrar Office</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <footer className="mt-16 mb-8 text-center no-print border-t border-slate-100 pt-10">
-                            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 mb-4 shadow-sm hover:scale-110 transition-transform"><Icon name="Heart" className="w-5 h-5 text-rose-500 fill-rose-500" /></div>
-                            <p className="text-slate-400 text-sm font-semibold flex items-center justify-center gap-2">Developed By <span className="text-slate-800 font-black">AISHORJO</span></p>
-                            <div className="flex items-center justify-center gap-4 mt-6">
-                                <span className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-sky-500 transition-colors cursor-pointer"><Icon name="Globe" className="w-4 h-4" /></span>
-                                <span className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><Icon name="Linkedin" className="w-4 h-4" /></span>
-                                <span className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-slate-900 transition-colors cursor-pointer"><Icon name="Github" className="w-4 h-4" /></span>
-                                <span className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"><Icon name="Instagram" className="w-4 h-4" /></span>
+                        {/* Enhanced Footer */}
+                        <footer className="mt-24 mb-16 text-center no-print">
+                            <div className="relative inline-block px-12 py-10 glass-card rounded-[3rem] premium-shadow border border-white">
+                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-rose-500 p-3 rounded-2xl shadow-xl shadow-rose-200">
+                                    <Icon name="Heart" className="w-6 h-6 text-white fill-white animate-pulse" />
+                                </div>
+                                
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em] mb-3">Masterpiece Creation</p>
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tighter mb-6 flex items-center justify-center gap-3">
+                                    Developed By <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-600 to-rose-400">AISHORJO</span>
+                                </h3>
+                                
+                                <div className="flex items-center justify-center gap-5">
+                                    <a href="#" className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#F8FAFC] text-slate-400 hover:bg-[#020617] hover:text-white transition-all transform hover:-translate-y-2 group">
+                                        <Icon name="Github" className="w-5 h-5 group-hover:scale-110" />
+                                    </a>
+                                    <a href="#" className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#F8FAFC] text-slate-400 hover:bg-[#0077B5] hover:text-white transition-all transform hover:-translate-y-2 group">
+                                        <Icon name="Linkedin" className="w-5 h-5 group-hover:scale-110" />
+                                    </a>
+                                    <a href="#" className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#F8FAFC] text-slate-400 hover:bg-rose-500 hover:text-white transition-all transform hover:-translate-y-2 group">
+                                        <Icon name="Instagram" className="w-5 h-5 group-hover:scale-110" />
+                                    </a>
+                                    <a href="#" className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#F8FAFC] text-slate-400 hover:bg-emerald-500 hover:text-white transition-all transform hover:-translate-y-2 group">
+                                        <Icon name="Globe" className="w-5 h-5 group-hover:scale-110" />
+                                    </a>
+                                </div>
+                                
+                                <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col items-center gap-2">
+                                    <div className="flex gap-1.5">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-rose-200"></div>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-rose-300"></div>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-rose-400"></div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.2em]">Academic Analytics Engine v3.0</p>
+                                </div>
                             </div>
                         </footer>
                     </div>
